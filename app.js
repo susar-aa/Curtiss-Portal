@@ -12,17 +12,18 @@ let state = {
   recentPickedIds: [] // tracked for sorting picked tab by recency
 };
 
-// --- 1. SERVICE WORKER REGISTRATION ---
+// --- 1. SERVICE WORKER REGISTRATION (Disabled to prevent browser SSL validation errors in staging/dev environments) ---
+/*
 if ("serviceWorker" in navigator) {
   window.addEventListener("load", () => {
     navigator.serviceWorker.register("./sw.js")
       .then((reg) => console.log("[PWA] Service Worker registered with scope:", reg.scope))
       .catch((err) => {
-        // Log as warning rather than error to prevent noisy SSL validation exceptions on self-signed dev/testing certificates
         console.warn("[PWA] Service Worker registration skipped (expected on untrusted/self-signed SSL development environments):", err.message);
       });
   });
 }
+*/
 
 // --- 2. INITIALIZATION ---
 document.addEventListener("DOMContentLoaded", () => {
