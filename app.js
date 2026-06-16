@@ -291,7 +291,7 @@ function renderSheetsUI(sheets) {
     `;
 
     card.addEventListener("click", () => {
-      openActionModal(sheet);
+      openFinalLoadingSheet(sheet);
     });
 
     listContainer.appendChild(card);
@@ -386,7 +386,7 @@ function openFinalLoadingSheet(sheet) {
     state.activeSheetItems = items.map(item => {
       // Fallback: default final_loaded_qty to loaded_qty (the picked quantity) if it is null
       if (item.final_loaded_qty === null) {
-        item.final_loaded_qty = item.loaded_qty;
+        item.final_loaded_qty = item.required_qty;
       }
 
       const finalKey = `final_${item.id}`;
@@ -497,7 +497,7 @@ function renderFinalLoadingUI() {
       <div class="product-info">
         <div class="product-name">${item.item_name}</div>
         <div class="qty-req" style="font-size: 11px; color: var(--text-secondary);">
-          Req: <strong>${item.required_qty}</strong> | Picked: <strong>${item.loaded_qty}</strong>
+          Required Qty: <strong>${item.required_qty}</strong>
         </div>
         <div style="margin-top: 4px;">
           <span class="variance-tag ${varClass}">${varLabel}</span>

@@ -29,7 +29,7 @@
         <div class="login-header">
           <div class="logo-box">📦</div>
           <h1>CURTISS PORTAL</h1>
-          <p>Warehouse Picking & Pre-Loading Module</p>
+          <p>Warehouse Final Loading Verification Module</p>
         </div>
         <form id="login-form">
           <div class="form-group">
@@ -99,56 +99,7 @@
       </main>
     </div>
 
-    <!-- 3. PRE-LOADING CHECK INTERFACE -->
-    <div id="view-picking" class="view">
-      <header class="app-header">
-        <div class="header-left">
-          <button id="btn-back-to-sheets" class="btn-icon">⬅️</button>
-          <div class="header-title-wrapper">
-            <h3 id="picking-sheet-num">Loading Sheet #00</h3>
-            <span id="picking-sheet-route" class="route-subtitle">Route info</span>
-          </div>
-        </div>
-        <div class="header-right">
-          <span class="status-indicator online" id="connection-status-picking">Online</span>
-        </div>
-      </header>
-
-      <!-- Sliding Dual Tab Header -->
-      <div class="tabs-container">
-        <button class="tab-btn active" id="tab-to-pick" data-tab="to-pick">
-          TO PICK <span id="count-to-pick" class="tab-badge">0</span>
-        </button>
-        <button class="tab-btn" id="tab-picked" data-tab="picked">
-          PICKED <span id="count-picked" class="tab-badge">0</span>
-        </button>
-        <div class="tab-slider"></div>
-      </div>
-
-      <!-- Main Picking Area -->
-      <main class="content-area picking-area">
-        <!-- Search Products -->
-        <div class="controls-bar search-products-bar">
-          <input type="text" id="search-products" placeholder="Search products in this list...">
-        </div>
-
-        <!-- TO PICK TAB VIEW -->
-        <div id="pane-to-pick" class="tab-pane active">
-          <div id="to-pick-list">
-            <!-- Grouped by Category dynamically -->
-          </div>
-        </div>
-
-        <!-- PICKED TAB VIEW -->
-        <div id="pane-picked" class="tab-pane">
-          <div id="picked-list" class="flat-list">
-            <!-- Ticked items sorted by recency -->
-          </div>
-        </div>
-      </main>
-    </div>
-
-    <!-- 3.5 FINAL LOADING VERIFICATION INTERFACE -->
+    <!-- 3. FINAL LOADING VERIFICATION INTERFACE -->
     <div id="view-final-loading" class="view">
       <header class="app-header">
         <div class="header-left">
@@ -165,7 +116,7 @@
 
       <!-- Stage indicator/Summary -->
       <div class="stage-summary-bar">
-        <span>Stage 2: Final Verification</span>
+        <span>Warehouse Final Loading Verification</span>
         <span id="final-progress-badge" class="badge-accent">0/0 Verified</span>
       </div>
 
@@ -182,28 +133,6 @@
       </main>
     </div>
 
-  </div>
-
-  <!-- ACTION SELECTOR MODAL -->
-  <div id="action-modal" class="modal-backdrop" style="display: none;">
-    <div class="modal-card action-selector-card">
-      <div class="modal-header">
-        <h3 id="action-modal-title">Select Loading Stage</h3>
-        <button id="action-modal-close" class="close-btn">&times;</button>
-      </div>
-      <div class="modal-body action-options-grid" style="min-height: auto; padding: 20px;">
-        <div class="action-option-box" id="opt-stage1" style="width: 100%;">
-          <div class="option-icon">📦</div>
-          <h4>Stage 1: Pre-Loading Pick</h4>
-          <p>Verify quantities to pick and pack from warehouse shelves.</p>
-        </div>
-        <div class="action-option-box" id="opt-stage2" style="width: 100%;">
-          <div class="option-icon">🚚</div>
-          <h4>Stage 2: Final Loading</h4>
-          <p>Perform final loaded vehicle check and record variances.</p>
-        </div>
-      </div>
-    </div>
   </div>
 
   <!-- 4. DYNAMIC IMAGE MODAL -->
