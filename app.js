@@ -141,7 +141,7 @@ function showView(viewId) {
 }
 
 // --- 5. AUTHENTICATION FLOW ---
-document.getElementById("login-form").addEventListener("submit", (e) => {
+function handleLogin(e) {
   e.preventDefault();
   const usernameVal = document.getElementById("username").value.trim();
   const passwordVal = document.getElementById("password").value.trim();
@@ -182,13 +182,13 @@ document.getElementById("login-form").addEventListener("submit", (e) => {
     errorEl.style.display = "block";
     console.error(err);
   });
-});
+}
 
-document.getElementById("logout-btn").addEventListener("click", () => {
+function handleLogout() {
   state.currentUser = null;
   localStorage.removeItem("curtiss_picking_user");
   showView("view-login");
-});
+}
 
 // --- 6. LOADING SHEETS CONTROLLER ---
 function loadSheets(quiet = false) {
@@ -839,10 +839,22 @@ function closeImageModal() {
   document.getElementById("image-modal").style.display = "none";
 }
 
+// Helper to safely register event listener if element exists
+function safeAddListener(id, event, callback) {
+  const el = document.getElementById(id);
+  if (el) {
+    el.addEventListener(event, callback);
+  }
+}
+
 // --- 9. EVENT LISTENERS SETUP ---
 function setupEventListeners() {
+  // Authentication Flow
+  safeAddListener("login-form", "submit", handleLogin);
+  safeAddListener("logout-btn", "click", handleLogout);
+
   // Navigation / Back button
-  document.getElementById("btn-back-to-sheets").addEventListener("click", () => {
+  safeAddListener("btn-back-to-sheets", "click", () => {
     // Clear details and reload list
     state.activeSheet = null;
     state.activeSheetItems = [];
@@ -851,7 +863,7 @@ function setupEventListeners() {
     loadSheets(true);
   });
 
-  document.getElementById("btn-back-to-sheets-final").addEventListener("click", () => {
+  safeAddListener("btn-back-to-sheets-final", "click", () => {
     state.activeSheet = null;
     state.activeSheetItems = [];
     showView("view-sheets");
@@ -859,42 +871,46 @@ function setupEventListeners() {
   });
 
   // Action Modal controls
-  document.getElementById("action-modal-close").addEventListener("click", () => {
-    document.getElementById("action-modal").style.display = "none";
+  safeAddListener("action-modal-close", "click", () => {
+    const modal = document.getElementById("action-modal");
+    if (modal) modal.style.display = "none";
   });
-  document.getElementById("action-modal").addEventListener("click", (e) => {
+  
+  safeAddListener("action-modal", "click", (e) => {
     if (e.target.id === "action-modal") {
-      document.getElementById("action-modal").style.display = "none";
+      e.target.style.display = "none";
     }
   });
 
-  document.getElementById("opt-stage1").addEventListener("click", () => {
-    document.getElementById("action-modal").style.display = "none";
+  safeAddListener("opt-stage1", "click", () => {
+    const modal = document.getElementById("action-modal");
+    if (modal) modal.style.display = "none";
     if (state.activeSheet) {
       openPickingSheet(state.activeSheet);
     }
   });
 
-  document.getElementById("opt-stage2").addEventListener("click", () => {
-    document.getElementById("action-modal").style.display = "none";
+  safeAddListener("opt-stage2", "click", () => {
+    const modal = document.getElementById("action-modal");
+    if (modal) modal.style.display = "none";
     if (state.activeSheet) {
       openFinalLoadingSheet(state.activeSheet);
     }
   });
 
   // Search input listeners
-  document.getElementById("search-sheets").addEventListener("input", () => renderSheetsUI(state.sheets));
-  document.getElementById("filter-status").addEventListener("change", () => renderSheetsUI(state.sheets));
+  safeAddListener("search-sheets", "input", () => renderSheetsUI(state.sheets));
+  safeAddListener("filter-status", "change", () => renderSheetsUI(state.sheets));
   
-  document.getElementById("search-products").addEventListener("input", () => renderPickingUI());
-  document.getElementById("search-products-final").addEventListener("input", () => renderFinalLoadingUI());
+  safeAddListener("search-products", "input", () => renderPickingUI());
+  safeAddListener("search-products-final", "input", () => renderFinalLoadingUI());
 
   // Tabs click events
-  document.getElementById("tab-to-pick").addEventListener("click", () => switchTab("to-pick"));
-  document.getElementById("tab-picked").addEventListener("click", () => switchTab("picked"));
+  safeAddListener("tab-to-pick", "click", () => switchTab("to-pick"));
+  safeAddListener("tab-picked", "click", () => switchTab("picked"));
 
   // Manual Sync trigger
-  document.getElementById("sync-btn").addEventListener("click", () => {
+  safeAddListener("sync-btn", "click", () => {
     if (!state.isOnline) {
       alert("Cannot sync: device is currently offline.");
       return;
@@ -903,8 +919,8 @@ function setupEventListeners() {
   });
 
   // Image modal closing
-  document.getElementById("modal-close").addEventListener("click", closeImageModal);
-  document.getElementById("image-modal").addEventListener("click", (e) => {
+  safeAddListener("modal-close", "click", closeImageModal);
+  safeAddListener("image-modal", "click", (e) => {
     if (e.target.id === "image-modal") {
       closeImageModal();
     }
