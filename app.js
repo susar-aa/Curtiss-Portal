@@ -17,7 +17,10 @@ if ("serviceWorker" in navigator) {
   window.addEventListener("load", () => {
     navigator.serviceWorker.register("./sw.js")
       .then((reg) => console.log("[PWA] Service Worker registered with scope:", reg.scope))
-      .catch((err) => console.error("[PWA] Service Worker registration failed:", err));
+      .catch((err) => {
+        // Log as warning rather than error to prevent noisy SSL validation exceptions on self-signed dev/testing certificates
+        console.warn("[PWA] Service Worker registration skipped (expected on untrusted/self-signed SSL development environments):", err.message);
+      });
   });
 }
 
