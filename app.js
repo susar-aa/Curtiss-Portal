@@ -291,7 +291,7 @@ function renderSheetsUI(sheets) {
     `;
 
     card.addEventListener("click", () => {
-      openPickingSheet(sheet);
+      openActionModal(sheet);
     });
 
     listContainer.appendChild(card);
@@ -350,6 +350,229 @@ function openPickingSheet(sheet) {
       console.error("[PWA] Error fetching sheet details:", err);
       if (localCachedDetails) applyLocalDetails(localCachedDetails);
     });
+}
+
+function openActionModal(sheet) {
+  state.activeSheet = sheet;
+  document.getElementById("action-modal").style.display = "flex";
+}
+
+// Queue final loading verification update for offline synchronization
+function queueFinalItemUpdate(item) {
+  state.pendingUpdates[`final_${item.id}`] = {
+    id: item.id,
+    final_loaded_qty: item.final_loaded_qty,
+    is_verified: item.is_verified,
+    user_id: state.currentUser ? state.currentUser.id : null,
+    updated_at: new Date().toISOString().slice(0, 19).replace('T', ' ')
+  };
+  localStorage.setItem("curtiss_picking_pending_sync", JSON.stringify(state.pendingUpdates));
+  updateSyncBadge();
+
+  if (state.isOnline) {
+    syncOfflineData();
+  }
+}
+
+function openFinalLoadingSheet(sheet) {
+  state.activeSheet = sheet;
+  document.getElementById("final-sheet-num").innerText = `Loading Sheet #${sheet.id}`;
+  document.getElementById("final-sheet-route").innerText = `Route: ${sheet.route_name}`;
+
+  const localCacheKey = `curtiss_picking_sheet_details_${sheet.id}`;
+  const localCachedDetails = JSON.parse(localStorage.getItem(localCacheKey));
+
+  const applyLocalFinalDetails = (items) => {
+    state.activeSheetItems = items.map(item => {
+      // Fallback: default final_loaded_qty to loaded_qty (the picked quantity) if it is null
+      if (item.final_loaded_qty === null) {
+        item.final_loaded_qty = item.loaded_qty;
+      }
+
+      const finalKey = `final_${item.id}`;
+      if (state.pendingUpdates[finalKey]) {
+        return {
+          ...item,
+          final_loaded_qty: parseFloat(state.pendingUpdates[finalKey].final_loaded_qty),
+          is_verified: parseInt(state.pendingUpdates[finalKey].is_verified),
+          variance: parseFloat(state.pendingUpdates[finalKey].final_loaded_qty) - parseFloat(item.required_qty)
+        };
+      }
+      return item;
+    });
+    
+    renderFinalLoadingUI();
+    showView("view-final-loading");
+  };
+
+  if (!state.isOnline) {
+    if (localCachedDetails) {
+      applyLocalFinalDetails(localCachedDetails);
+    } else {
+      alert("This sheet is not downloaded for offline usage. Connect to load.");
+    }
+    return;
+  }
+
+  fetch(`${API_BASE}/api_get_sheet_details/${sheet.id}`)
+    .then(res => res.json())
+    .then(data => {
+      if (data.success) {
+        localStorage.setItem(localCacheKey, JSON.stringify(data.items));
+        applyLocalFinalDetails(data.items);
+      } else {
+        if (localCachedDetails) applyLocalFinalDetails(localCachedDetails);
+      }
+    })
+    .catch(err => {
+      console.error("[PWA] Error fetching sheet details:", err);
+      if (localCachedDetails) applyLocalFinalDetails(localCachedDetails);
+    });
+}
+
+function renderFinalLoadingUI() {
+  const searchVal = document.getElementById("search-products-final").value.toLowerCase();
+  
+  // Filter products by search term
+  const items = state.activeSheetItems.filter(item => 
+    item.item_name.toLowerCase().includes(searchVal)
+  );
+
+  // Update verified count badge
+  const verifiedCount = items.filter(item => item.is_verified === 1).length;
+  document.getElementById("final-progress-badge").innerText = `${verifiedCount}/${items.length} Verified`;
+
+  const container = document.getElementById("final-loading-list");
+  container.innerHTML = "";
+
+  if (items.length === 0) {
+    container.innerHTML = `
+      <div class="empty-state">
+        <div class="empty-icon">📄</div>
+        <h3>No Products Found</h3>
+      </div>
+    `;
+    return;
+  }
+
+  // Sort products alphabetically
+  items.sort((a, b) => a.item_name.localeCompare(b.item_name));
+
+  items.forEach(item => {
+    const card = document.createElement("div");
+    
+    // Compute variance
+    const variance = item.final_loaded_qty - item.required_qty;
+    let varClass = "exact";
+    let varLabel = "Match";
+    if (variance < 0) {
+      varClass = "short";
+      varLabel = `${variance} Short`;
+    } else if (variance > 0) {
+      varClass = "over";
+      varLabel = `+${variance} Over`;
+    }
+
+    // Highlight border based on variance/verification status
+    let borderClass = "";
+    if (item.is_verified) {
+      borderClass = "picked";
+    } else if (variance !== 0) {
+      borderClass = variance > 0 ? "over-picked" : "under-picked";
+    }
+
+    card.className = `product-card ${borderClass}`;
+    card.id = `final-card-${item.id}`;
+
+    const imageSrc = item.image_path 
+      ? `https://curtiss.suzxlabs.com/${item.image_path.replace(/^\/+/, '')}`
+      : null;
+
+    card.innerHTML = `
+      <div class="product-img-box">
+        ${imageSrc 
+          ? `<img src="${imageSrc}" alt="${item.item_name}" onerror="this.outerHTML='<span class=\\'img-fallback\\'>📦</span>'">` 
+          : `<span class="img-fallback">📦</span>`}
+      </div>
+      <div class="product-info">
+        <div class="product-name">${item.item_name}</div>
+        <div class="qty-req" style="font-size: 11px; color: var(--text-secondary);">
+          Req: <strong>${item.required_qty}</strong> | Picked: <strong>${item.loaded_qty}</strong>
+        </div>
+        <div style="margin-top: 4px;">
+          <span class="variance-tag ${varClass}">${varLabel}</span>
+        </div>
+      </div>
+      <div class="qty-adjuster">
+        <button class="qty-btn btn-minus" type="button">−</button>
+        <div class="qty-input-wrapper">
+          <input class="qty-input" type="number" min="0" value="${item.final_loaded_qty}">
+        </div>
+        <button class="qty-btn btn-plus" type="button">+</button>
+      </div>
+      <div style="padding-left: 8px;">
+        <button class="btn-verify ${item.is_verified ? 'verified' : ''}">${item.is_verified ? 'Verified ✓' : 'Verify'}</button>
+      </div>
+    `;
+
+    // Attach listeners
+    const imgBox = card.querySelector(".product-img-box");
+    imgBox.addEventListener("click", (e) => {
+      e.stopPropagation();
+      openImageModal(item.item_name, imageSrc);
+    });
+
+    const qtyInput = card.querySelector(".qty-input");
+    const btnMinus = card.querySelector(".btn-minus");
+    const btnPlus = card.querySelector(".btn-plus");
+    const btnVerify = card.querySelector(".btn-verify");
+
+    const updateFinalQty = (newVal) => {
+      newVal = Math.max(0, parseFloat(newVal) || 0);
+      qtyInput.value = newVal;
+      item.final_loaded_qty = newVal;
+      item.variance = newVal - item.required_qty;
+      
+      // Reset verified status on change
+      item.is_verified = 0;
+      
+      queueFinalItemUpdate(item);
+      renderFinalLoadingUI();
+    };
+
+    btnMinus.addEventListener("click", (e) => {
+      e.stopPropagation();
+      updateFinalQty(item.final_loaded_qty - 1);
+    });
+
+    btnPlus.addEventListener("click", (e) => {
+      e.stopPropagation();
+      updateFinalQty(item.final_loaded_qty + 1);
+    });
+
+    qtyInput.addEventListener("change", () => {
+      updateFinalQty(qtyInput.value);
+    });
+
+    qtyInput.addEventListener("click", (e) => {
+      e.stopPropagation();
+    });
+
+    btnVerify.addEventListener("click", (e) => {
+      e.stopPropagation();
+      
+      if (item.is_verified === 0) {
+        item.is_verified = 1;
+      } else {
+        item.is_verified = 0;
+      }
+
+      queueFinalItemUpdate(item);
+      renderFinalLoadingUI();
+    });
+
+    container.appendChild(card);
+  });
 }
 
 // Switch between To Pick / Picked sliding tabs
@@ -626,11 +849,43 @@ function setupEventListeners() {
     loadSheets(true);
   });
 
+  document.getElementById("btn-back-to-sheets-final").addEventListener("click", () => {
+    state.activeSheet = null;
+    state.activeSheetItems = [];
+    showView("view-sheets");
+    loadSheets(true);
+  });
+
+  // Action Modal controls
+  document.getElementById("action-modal-close").addEventListener("click", () => {
+    document.getElementById("action-modal").style.display = "none";
+  });
+  document.getElementById("action-modal").addEventListener("click", (e) => {
+    if (e.target.id === "action-modal") {
+      document.getElementById("action-modal").style.display = "none";
+    }
+  });
+
+  document.getElementById("opt-stage1").addEventListener("click", () => {
+    document.getElementById("action-modal").style.display = "none";
+    if (state.activeSheet) {
+      openPickingSheet(state.activeSheet);
+    }
+  });
+
+  document.getElementById("opt-stage2").addEventListener("click", () => {
+    document.getElementById("action-modal").style.display = "none";
+    if (state.activeSheet) {
+      openFinalLoadingSheet(state.activeSheet);
+    }
+  });
+
   // Search input listeners
   document.getElementById("search-sheets").addEventListener("input", () => renderSheetsUI(state.sheets));
   document.getElementById("filter-status").addEventListener("change", () => renderSheetsUI(state.sheets));
   
   document.getElementById("search-products").addEventListener("input", () => renderPickingUI());
+  document.getElementById("search-products-final").addEventListener("input", () => renderFinalLoadingUI());
 
   // Tabs click events
   document.getElementById("tab-to-pick").addEventListener("click", () => switchTab("to-pick"));

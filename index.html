@@ -148,6 +148,62 @@
       </main>
     </div>
 
+    <!-- 3.5 FINAL LOADING VERIFICATION INTERFACE -->
+    <div id="view-final-loading" class="view">
+      <header class="app-header">
+        <div class="header-left">
+          <button id="btn-back-to-sheets-final" class="btn-icon">⬅️</button>
+          <div class="header-title-wrapper">
+            <h3 id="final-sheet-num">Loading Sheet #00</h3>
+            <span id="final-sheet-route" class="route-subtitle">Route info</span>
+          </div>
+        </div>
+        <div class="header-right">
+          <span class="status-indicator online" id="connection-status-final">Online</span>
+        </div>
+      </header>
+
+      <!-- Stage indicator/Summary -->
+      <div class="stage-summary-bar">
+        <span>Stage 2: Final Verification</span>
+        <span id="final-progress-badge" class="badge-accent">0/0 Verified</span>
+      </div>
+
+      <!-- Main Final Loading Area -->
+      <main class="content-area final-loading-area">
+        <!-- Search Products -->
+        <div class="controls-bar search-products-bar">
+          <input type="text" id="search-products-final" placeholder="Search products in this list...">
+        </div>
+
+        <div id="final-loading-list" class="flat-list" style="display: flex; flex-direction: column; gap: 12px;">
+          <!-- Final loading verification items -->
+        </div>
+      </main>
+    </div>
+
+  </div>
+
+  <!-- ACTION SELECTOR MODAL -->
+  <div id="action-modal" class="modal-backdrop" style="display: none;">
+    <div class="modal-card action-selector-card">
+      <div class="modal-header">
+        <h3 id="action-modal-title">Select Loading Stage</h3>
+        <button id="action-modal-close" class="close-btn">&times;</button>
+      </div>
+      <div class="modal-body action-options-grid" style="min-height: auto; padding: 20px;">
+        <div class="action-option-box" id="opt-stage1" style="width: 100%;">
+          <div class="option-icon">📦</div>
+          <h4>Stage 1: Pre-Loading Pick</h4>
+          <p>Verify quantities to pick and pack from warehouse shelves.</p>
+        </div>
+        <div class="action-option-box" id="opt-stage2" style="width: 100%;">
+          <div class="option-icon">🚚</div>
+          <h4>Stage 2: Final Loading</h4>
+          <p>Perform final loaded vehicle check and record variances.</p>
+        </div>
+      </div>
+    </div>
   </div>
 
   <!-- 4. DYNAMIC IMAGE MODAL -->

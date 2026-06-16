@@ -682,9 +682,8 @@ button {
   font-size: 13px;
   font-weight: 500;
   color: var(--text-primary);
-  white-space: nowrap;
-  text-overflow: ellipsis;
-  overflow: hidden;
+  white-space: normal;
+  word-break: break-word;
 }
 .qty-req {
   font-size: 11px;
@@ -889,3 +888,103 @@ button {
 .search-products-bar {
   margin-bottom: 15px;
 }
+
+/* Stage selector modal and cards */
+.action-selector-card {
+  max-width: 440px;
+}
+.action-options-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  width: 100%;
+}
+.action-option-box {
+  background: rgba(15, 23, 42, 0.4);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  padding: 20px;
+  cursor: pointer;
+  transition: var(--transition);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 10px;
+}
+.action-option-box:hover {
+  background: var(--surface-hover);
+  border-color: var(--primary);
+  transform: translateY(-2px);
+}
+.option-icon {
+  font-size: 36px;
+}
+.action-option-box h4 {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+.action-option-box p {
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+/* Stage 2 Summary Bar */
+.stage-summary-bar {
+  background: rgba(245, 158, 11, 0.1);
+  border-bottom: 1px solid rgba(245, 158, 11, 0.2);
+  padding: 10px 18px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--warning);
+}
+.badge-accent {
+  background: var(--warning);
+  color: #090d16;
+  padding: 2px 8px;
+  border-radius: 20px;
+  font-size: 11px;
+}
+
+/* Variance indicator tags */
+.variance-tag {
+  font-size: 11px;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: 4px;
+  text-transform: uppercase;
+}
+.variance-tag.exact {
+  background: rgba(16, 185, 129, 0.1);
+  color: var(--accent);
+}
+.variance-tag.short {
+  background: rgba(239, 68, 68, 0.1);
+  color: var(--danger);
+}
+.variance-tag.over {
+  background: rgba(245, 158, 11, 0.1);
+  color: var(--warning);
+}
+
+/* Final Verification Button in card */
+.btn-verify {
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--text-secondary);
+  border: 1px solid var(--border-color);
+  padding: 8px 12px;
+  border-radius: var(--radius-sm);
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.btn-verify.verified {
+  background: var(--accent);
+  color: #090d16;
+  border-color: var(--accent);
+}
+
