@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Curtiss Picking Portal</title>
+  <meta name="theme-color" content="#6366f1">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <link rel="apple-touch-icon" href="icon-192.png">
+  <link rel="manifest" href="manifest.json">
+  <link rel="stylesheet" href="app.css">
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+
+  <!-- Background Glows -->
+  <div class="bg-glow bg-glow-1"></div>
+  <div class="bg-glow bg-glow-2"></div>
+
+  <!-- Global App Container -->
+  <div id="app">
+
+    <!-- 1. LOGIN SCREEN -->
+    <div id="view-login" class="view active">
+      <div class="login-card">
+        <div class="login-header">
+          <div class="logo-box">📦</div>
+          <h1>CURTISS PORTAL</h1>
+          <p>Warehouse Picking & Pre-Loading Module</p>
+        </div>
+        <form id="login-form">
+          <div class="form-group">
+            <label for="username">Username</label>
+            <input type="text" id="username" placeholder="Enter warehouse username" required autocomplete="username">
+          </div>
+          <div class="form-group">
+            <label for="password">Password</label>
+            <input type="password" id="password" placeholder="Enter security password" required autocomplete="current-password">
+          </div>
+          <div id="login-error" class="error-msg" style="display: none;"></div>
+          <button type="submit" class="btn-primary">
+            <span>Log In Security Portal</span>
+            <div class="btn-glow"></div>
+          </button>
+        </form>
+      </div>
+    </div>
+
+    <!-- 2. LOADING SHEETS DASHBOARD -->
+    <div id="view-sheets" class="view">
+      <header class="app-header">
+        <div class="header-left">
+          <span class="user-badge" id="user-display">Warehouse Staff</span>
+          <span class="status-indicator online" id="connection-status">Online</span>
+        </div>
+        <div class="header-right">
+          <button id="sync-btn" class="btn-icon" title="Sync Offline Data" style="position: relative;">
+            🔄
+            <span id="sync-badge" class="badge-count" style="display: none;">0</span>
+          </button>
+          <button id="logout-btn" class="btn-icon" title="Log Out">🚪</button>
+        </div>
+      </header>
+
+      <main class="content-area">
+        <div class="page-title">
+          <h2>Delivery Loading Sheets</h2>
+          <p>Select a manifest to verify before loading</p>
+        </div>
+
+        <!-- Search and Filter Controls -->
+        <div class="controls-bar">
+          <input type="text" id="search-sheets" placeholder="Search by route, vehicle, driver...">
+          <select id="filter-status">
+            <option value="all">All Statuses</option>
+            <option value="Pending">Pending</option>
+            <option value="In Progress">In Progress</option>
+            <option value="Completed">Completed</option>
+          </select>
+        </div>
+
+        <div id="sheets-loading-spinner" class="spinner-wrapper" style="display: none;">
+          <div class="spinner"></div>
+          <p>Loading manifests...</p>
+        </div>
+
+        <div id="sheets-empty-state" class="empty-state" style="display: none;">
+          <div class="empty-icon">📄</div>
+          <h3>No Loading Sheets Found</h3>
+          <p>All sheets might be finalized or none match filters.</p>
+        </div>
+
+        <div id="sheets-list" class="grid-list">
+          <!-- Dynamic Loading Sheet Cards -->
+        </div>
+      </main>
+    </div>
+
+    <!-- 3. PRE-LOADING CHECK INTERFACE -->
+    <div id="view-picking" class="view">
+      <header class="app-header">
+        <div class="header-left">
+          <button id="btn-back-to-sheets" class="btn-icon">⬅️</button>
+          <div class="header-title-wrapper">
+            <h3 id="picking-sheet-num">Loading Sheet #00</h3>
+            <span id="picking-sheet-route" class="route-subtitle">Route info</span>
+          </div>
+        </div>
+        <div class="header-right">
+          <span class="status-indicator online" id="connection-status-picking">Online</span>
+        </div>
+      </header>
+
+      <!-- Sliding Dual Tab Header -->
+      <div class="tabs-container">
+        <button class="tab-btn active" id="tab-to-pick" data-tab="to-pick">
+          TO PICK <span id="count-to-pick" class="tab-badge">0</span>
+        </button>
+        <button class="tab-btn" id="tab-picked" data-tab="picked">
+          PICKED <span id="count-picked" class="tab-badge">0</span>
+        </button>
+        <div class="tab-slider"></div>
+      </div>
+
+      <!-- Main Picking Area -->
+      <main class="content-area picking-area">
+        <!-- Search Products -->
+        <div class="controls-bar search-products-bar">
+          <input type="text" id="search-products" placeholder="Search products in this list...">
+        </div>
+
+        <!-- TO PICK TAB VIEW -->
+        <div id="pane-to-pick" class="tab-pane active">
+          <div id="to-pick-list">
+            <!-- Grouped by Category dynamically -->
+          </div>
+        </div>
+
+        <!-- PICKED TAB VIEW -->
+        <div id="pane-picked" class="tab-pane">
+          <div id="picked-list" class="flat-list">
+            <!-- Ticked items sorted by recency -->
+          </div>
+        </div>
+      </main>
+    </div>
+
+  </div>
+
+  <!-- 4. DYNAMIC IMAGE MODAL -->
+  <div id="image-modal" class="modal-backdrop" style="display: none;">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3 id="modal-product-name">Product Image</h3>
+        <button id="modal-close" class="close-btn">&times;</button>
+      </div>
+      <div class="modal-body">
+        <img id="modal-image" src="" alt="Product View">
+      </div>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
