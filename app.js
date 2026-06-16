@@ -1,5 +1,7 @@
 // PWA Core Logic & State Management
-const API_BASE = "https://curtiss.suzxlabs.com/picking";
+const API_BASE = window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1" || window.location.hostname.startsWith("192.168.")
+  ? window.location.origin + "/Curtiss-ERP/Picking"
+  : "https://curtiss.suzxlabs.com/picking";
 
 let state = {
   currentUser: JSON.parse(localStorage.getItem("curtiss_picking_user")) || null,
