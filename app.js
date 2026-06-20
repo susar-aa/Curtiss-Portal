@@ -3,6 +3,41 @@ const API_BASE = window.location.hostname === "localhost" || window.location.hos
   ? window.location.origin + "/Curtiss-ERP/Picking"
   : "https://curtiss.suzxlabs.com/picking";
 
+// Secure fetch wrapper to validate and handle session expiry
+function fetchSecure(url, options = {}) {
+  options.credentials = options.credentials || "include";
+  
+  return fetch(url, options)
+    .then(res => {
+      if (res.status === 401 || res.status === 403) {
+        handleSessionExpired();
+        throw new Error("Unauthorized");
+      }
+      
+      // Check if JSON contains unauthorized flag
+      const contentType = res.headers.get("content-type");
+      if (contentType && contentType.includes("application/json")) {
+        return res.clone().json().then(data => {
+          if (data && data.unauthorized) {
+            handleSessionExpired();
+            throw new Error("Unauthorized");
+          }
+          return res;
+        }).catch(() => res);
+      }
+      
+      return res;
+    });
+}
+
+function handleSessionExpired() {
+  alert("Your session has expired. Please log in again.");
+  state.currentUser = null;
+  localStorage.removeItem("curtiss_picking_user");
+  localStorage.removeItem("curtiss_picking_sheets");
+  showView("view-login");
+}
+
 let state = {
   currentUser: JSON.parse(localStorage.getItem("curtiss_picking_user")) || null,
   sheets: JSON.parse(localStorage.getItem("curtiss_picking_sheets")) || [],
@@ -110,7 +145,7 @@ function syncOfflineData() {
   // Extract unique delivery IDs from queued updates to trigger status recalculations
   const deliveryIds = [...new Set(state.activeSheetItems.map(item => item.delivery_id))];
 
-  fetch(`${API_BASE}/api_sync`, {
+  fetchSecure(`${API_BASE}/api_sync`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ updates: updatesArray, delivery_ids: deliveryIds })
@@ -216,7 +251,7 @@ function loadSheets(quiet = false) {
     return;
   }
 
-  fetch(`${API_BASE}/api_get_sheets`)
+  fetchSecure(`${API_BASE}/api_get_sheets`)
     .then(res => res.json())
     .then(data => {
       if (data.success) {
@@ -293,7 +328,7 @@ function renderSheetsUI(sheets) {
     `;
 
     card.addEventListener("click", () => {
-      openFinalLoadingSheet(sheet);
+      openActionModal(sheet);
     });
 
     listContainer.appendChild(card);
@@ -338,7 +373,7 @@ function openPickingSheet(sheet) {
     return;
   }
 
-  fetch(`${API_BASE}/api_get_sheet_details/${sheet.id}`)
+  fetchSecure(`${API_BASE}/api_get_sheet_details/${sheet.id}`)
     .then(res => res.json())
     .then(data => {
       if (data.success) {
@@ -416,7 +451,7 @@ function openFinalLoadingSheet(sheet) {
     return;
   }
 
-  fetch(`${API_BASE}/api_get_sheet_details/${sheet.id}`)
+  fetchSecure(`${API_BASE}/api_get_sheet_details/${sheet.id}`)
     .then(res => res.json())
     .then(data => {
       if (data.success) {

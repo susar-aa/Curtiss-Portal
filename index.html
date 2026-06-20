@@ -133,9 +133,81 @@
       </main>
     </div>
 
+    <!-- 4. PICKING SCREEN / CHECKLIST -->
+    <div id="view-picking" class="view">
+      <header class="app-header">
+        <div class="header-left">
+          <button id="btn-back-to-sheets" class="btn-icon">⬅️</button>
+          <div class="header-title-wrapper">
+            <h3 id="picking-sheet-num">Loading Sheet #00</h3>
+            <span id="picking-sheet-route" class="route-subtitle">Route info</span>
+          </div>
+        </div>
+        <div class="header-right">
+          <span class="status-indicator online">Online</span>
+        </div>
+      </header>
+
+      <!-- Sliding Tabs Control -->
+      <div class="tabs-container">
+        <button id="tab-to-pick" class="tab-btn active">
+          To Pick <span id="count-to-pick" class="tab-badge">0</span>
+        </button>
+        <button id="tab-picked" class="tab-btn">
+          Picked <span id="count-picked" class="tab-badge">0</span>
+        </button>
+        <div class="tab-slider"></div>
+      </div>
+
+      <!-- Main Picking Area -->
+      <main class="content-area picking-area">
+        <!-- Search Products -->
+        <div class="controls-bar search-products-bar">
+          <input type="text" id="search-products" placeholder="Search products to pick...">
+        </div>
+
+        <!-- Sliding Tab Panes -->
+        <div id="pane-to-pick" class="tab-pane active">
+          <div id="to-pick-list" style="display: flex; flex-direction: column; gap: 16px;">
+            <!-- Grouped To-Pick Items -->
+          </div>
+        </div>
+
+        <div id="pane-picked" class="tab-pane">
+          <div id="picked-list" style="display: flex; flex-direction: column; gap: 12px;">
+            <!-- Picked Items -->
+          </div>
+        </div>
+      </main>
+    </div>
+
   </div>
 
-  <!-- 4. DYNAMIC IMAGE MODAL -->
+  <!-- Action Selection Modal -->
+  <div id="action-modal" class="modal-backdrop" style="display: none;">
+    <div class="modal-card action-selector-card">
+      <div class="modal-header">
+        <h3>Select Warehouse Stage</h3>
+        <button id="action-modal-close" class="close-btn">&times;</button>
+      </div>
+      <div class="modal-body" style="padding: 24px; background: transparent; min-height: auto;">
+        <div class="action-options-grid">
+          <div id="opt-stage1" class="action-option-box">
+            <span class="option-icon">📦</span>
+            <h4>Stage 1: Pre-Loading Picking</h4>
+            <p>Gather items from warehouse shelves and prepare for loading</p>
+          </div>
+          <div id="opt-stage2" class="action-option-box">
+            <span class="option-icon">🚚</span>
+            <h4>Stage 2: Final Loading</h4>
+            <p>Verify quantities as items are loaded into the delivery vehicle</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 5. DYNAMIC IMAGE MODAL -->
   <div id="image-modal" class="modal-backdrop" style="display: none;">
     <div class="modal-card">
       <div class="modal-header">
