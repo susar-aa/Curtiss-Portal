@@ -231,6 +231,8 @@ function loadSheets(quiet = false) {
   const emptyState = document.getElementById("sheets-empty-state");
   const listContainer = document.getElementById("sheets-list");
 
+  console.log("[PWA] loadSheets called. Online status:", state.isOnline);
+
   if (!quiet) {
     spinner.style.display = "flex";
     listContainer.innerHTML = "";
@@ -238,6 +240,7 @@ function loadSheets(quiet = false) {
   emptyState.style.display = "none";
 
   const renderLocalData = () => {
+    console.log("[PWA] Rendering local sheets data. Count:", state.sheets.length);
     spinner.style.display = "none";
     if (state.sheets.length === 0) {
       emptyState.style.display = "flex";
@@ -251,14 +254,22 @@ function loadSheets(quiet = false) {
     return;
   }
 
-  fetchSecure(`${API_BASE}/api_get_sheets`)
-    .then(res => res.json())
+  const fetchUrl = `${API_BASE}/api_get_sheets`;
+  console.log("[PWA] Fetching sheets from:", fetchUrl);
+
+  fetchSecure(fetchUrl)
+    .then(res => {
+      console.log("[PWA] api_get_sheets fetch response status:", res.status);
+      return res.json();
+    })
     .then(data => {
+      console.log("[PWA] api_get_sheets JSON data parsed:", data);
       if (data.success) {
-        state.sheets = data.sheets;
-        localStorage.setItem("curtiss_picking_sheets", JSON.stringify(data.sheets));
-        renderSheetsUI(data.sheets);
+        state.sheets = data.sheets || [];
+        localStorage.setItem("curtiss_picking_sheets", JSON.stringify(state.sheets));
+        renderSheetsUI(state.sheets);
       } else {
+        console.warn("[PWA] api_get_sheets returned success=false", data);
         renderLocalData();
       }
     })
@@ -272,24 +283,43 @@ function loadSheets(quiet = false) {
 }
 
 function renderSheetsUI(sheets) {
+  console.log("[PWA] renderSheetsUI called with sheets:", sheets);
   const listContainer = document.getElementById("sheets-list");
   listContainer.innerHTML = "";
 
-  const searchVal = document.getElementById("search-sheets").value.toLowerCase();
-  const statusFilter = document.getElementById("filter-status").value;
+  const searchInput = document.getElementById("search-sheets");
+  const filterSelect = document.getElementById("filter-status");
+
+  const searchVal = searchInput ? searchInput.value.toLowerCase() : "";
+  const statusFilter = filterSelect ? filterSelect.value : "all";
+
+  console.log("[PWA] Filter parameters - searchVal:", searchVal, "statusFilter:", statusFilter);
 
   const filtered = sheets.filter(sheet => {
-    const matchesSearch = 
-      sheet.id.toString().includes(searchVal) ||
-      sheet.route_name.toLowerCase().includes(searchVal) ||
-      sheet.vehicle_number.toLowerCase().includes(searchVal) ||
-      sheet.driver_name.toLowerCase().includes(searchVal) ||
-      sheet.customer_info.toLowerCase().includes(searchVal);
+    if (!sheet) return false;
 
-    const matchesStatus = statusFilter === "all" || sheet.status === statusFilter;
+    const idStr = sheet.id ? sheet.id.toString() : "";
+    const routeName = sheet.route_name ? sheet.route_name.toLowerCase() : "";
+    const vehicleNumber = sheet.vehicle_number ? sheet.vehicle_number.toLowerCase() : "";
+    const driverName = sheet.driver_name ? sheet.driver_name.toLowerCase() : "";
+    const customerInfo = sheet.customer_info ? sheet.customer_info.toLowerCase() : "";
+    const statusVal = sheet.status ? sheet.status : "";
+
+    const matchesSearch = 
+      idStr.includes(searchVal) ||
+      routeName.includes(searchVal) ||
+      vehicleNumber.includes(searchVal) ||
+      driverName.includes(searchVal) ||
+      customerInfo.includes(searchVal);
+
+    // Support matching both sheet.status and case-insensitive check
+    const matchesStatus = statusFilter === "all" || 
+      statusVal.toLowerCase() === statusFilter.toLowerCase();
 
     return matchesSearch && matchesStatus;
   });
+
+  console.log("[PWA] Filtered sheets count:", filtered.length, "out of", sheets.length);
 
   if (filtered.length === 0) {
     document.getElementById("sheets-empty-state").style.display = "flex";
@@ -305,16 +335,20 @@ function renderSheetsUI(sheets) {
 
     const card = document.createElement("div");
     card.className = "manifest-card";
+    
+    const displayStatus = sheet.status || "Pending";
+    const statusClass = displayStatus.toLowerCase().replace(/\s+/g, '-');
+
     card.innerHTML = `
       <div class="manifest-card-header">
         <h3>Loading Sheet #${sheet.id}</h3>
-        <span class="manifest-status ${sheet.status.toLowerCase().replace(' ', '-')}">${sheet.status}</span>
+        <span class="manifest-status ${statusClass}">${displayStatus}</span>
       </div>
       <div class="manifest-info-row">
-        <span>📍 <strong>Route:</strong> ${sheet.route_name}</span>
-        <span>👥 <strong>Customers:</strong> ${sheet.customer_info}</span>
-        <span>🚚 <strong>Vehicle:</strong> ${sheet.vehicle_number} (${sheet.driver_name})</span>
-        <span>📅 <strong>Delivery Date:</strong> ${sheet.delivery_date}</span>
+        <span>📍 <strong>Route:</strong> ${sheet.route_name || 'N/A'}</span>
+        <span>👥 <strong>Customers:</strong> ${sheet.customer_info || 'N/A'}</span>
+        <span>🚚 <strong>Vehicle:</strong> ${sheet.vehicle_number || 'N/A'} (${sheet.driver_name || 'N/A'})</span>
+        <span>📅 <strong>Delivery Date:</strong> ${sheet.delivery_date || 'N/A'}</span>
       </div>
       <div class="manifest-progress-wrapper">
         <div class="progress-text">
