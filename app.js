@@ -559,6 +559,21 @@ function renderFinalLoadingUI() {
       ? `https://curtiss.suzxlabs.com/${item.image_path.replace(/^\/+/, '')}`
       : null;
 
+    let replacementInfoHtml = "";
+    if (item.replaced_by_name) {
+      replacementInfoHtml = `
+        <div style="font-size: 11px; color: #a855f7; font-weight: bold; margin-top: 4px; display: flex; align-items: center; gap: 4px;">
+          <span>🔄 Replaced By:</span> <span>${item.replaced_by_name} (Qty: ${item.replacement_qty})</span>
+        </div>
+      `;
+    } else if (item.replaces_name) {
+      replacementInfoHtml = `
+        <div style="font-size: 11px; color: #10b981; font-weight: bold; margin-top: 4px; display: flex; align-items: center; gap: 4px;">
+          <span>★ Substituted for:</span> <span>${item.replaces_name}</span>
+        </div>
+      `;
+    }
+
     card.innerHTML = `
       <div class="product-img-box">
         ${imageSrc 
@@ -570,8 +585,9 @@ function renderFinalLoadingUI() {
         <div class="qty-req" style="font-size: 11px; color: var(--text-secondary);">
           Required Qty: <strong>${item.required_qty}</strong>
         </div>
-        <div style="margin-top: 4px;">
-          <span class="variance-tag ${varClass}">${varLabel}</span>
+        <div style="margin-top: 4px; display: flex; flex-direction: column; gap: 4px;">
+          <div><span class="variance-tag ${varClass}">${varLabel}</span></div>
+          ${replacementInfoHtml}
         </div>
       </div>
       <div class="qty-adjuster">
@@ -581,8 +597,12 @@ function renderFinalLoadingUI() {
         </div>
         <button class="qty-btn btn-plus" type="button">+</button>
       </div>
-      <div style="padding-left: 8px;">
+      <div style="padding-left: 8px; display: flex; flex-direction: column; gap: 6px;">
         <button class="btn-verify ${item.is_verified ? 'verified' : ''}">${item.is_verified ? 'Verified ✓' : 'Verify'}</button>
+        ${(!item.replaced_by_name && !item.replaces_name && item.required_qty > 0) 
+          ? `<button class="btn-replace" style="padding: 6px 10px; background: #673ab7; color: white; border: none; border-radius: 4px; font-size: 11px; cursor: pointer; font-weight: bold; width: 100%;">Replace</button>` 
+          : ''
+        }
       </div>
     `;
 
@@ -597,6 +617,7 @@ function renderFinalLoadingUI() {
     const btnMinus = card.querySelector(".btn-minus");
     const btnPlus = card.querySelector(".btn-plus");
     const btnVerify = card.querySelector(".btn-verify");
+    const btnReplace = card.querySelector(".btn-replace");
 
     const updateFinalQty = (newVal) => {
       newVal = Math.max(0, parseFloat(newVal) || 0);
@@ -641,6 +662,13 @@ function renderFinalLoadingUI() {
       queueFinalItemUpdate(item);
       renderFinalLoadingUI();
     });
+
+    if (btnReplace) {
+      btnReplace.addEventListener("click", (e) => {
+        e.stopPropagation();
+        openReplaceProductModal(item);
+      });
+    }
 
     container.appendChild(card);
   });
@@ -908,6 +936,134 @@ function closeImageModal() {
   document.getElementById("image-modal").style.display = "none";
 }
 
+// --- PRODUCT REPLACEMENT FUNCTIONS ---
+function openReplaceProductModal(item) {
+  if (!state.isOnline) {
+    alert("Product replacement requires an active internet connection.");
+    return;
+  }
+  
+  state.originalItemToReplace = item;
+  state.selectedReplacementProduct = null;
+  
+  document.getElementById("replace-orig-name").innerText = item.item_name;
+  document.getElementById("replace-orig-qty").innerText = item.required_qty;
+  
+  document.getElementById("replacement-search-input").value = "";
+  document.getElementById("replacement-search-results").innerHTML = "";
+  document.getElementById("replacement-search-results").style.display = "none";
+  document.getElementById("selected-replacement-box").style.display = "none";
+  
+  document.getElementById("replacement-qty-input").value = item.required_qty;
+  
+  const modal = document.getElementById("replace-product-modal");
+  if (modal) modal.style.display = "flex";
+}
+
+function closeReplaceProductModal() {
+  const modal = document.getElementById("replace-product-modal");
+  if (modal) modal.style.display = "none";
+  state.originalItemToReplace = null;
+  state.selectedReplacementProduct = null;
+}
+
+let replacementSearchTimeout = null;
+function handleReplacementSearch() {
+  const q = document.getElementById("replacement-search-input").value.trim();
+  const resultsDiv = document.getElementById("replacement-search-results");
+  
+  if (q.length < 2) {
+    resultsDiv.innerHTML = "";
+    resultsDiv.style.display = "none";
+    return;
+  }
+  
+  if (replacementSearchTimeout) clearTimeout(replacementSearchTimeout);
+  
+  replacementSearchTimeout = setTimeout(() => {
+    fetchSecure(`${API_BASE}/api_search_products?q=${encodeURIComponent(q)}`)
+      .then(res => res.json())
+      .then(data => {
+        if (data.success && data.products) {
+          resultsDiv.innerHTML = "";
+          if (data.products.length === 0) {
+            resultsDiv.innerHTML = '<div style="padding: 10px; color: var(--text-secondary); text-align: center; font-size:12px;">No products found</div>';
+          } else {
+            data.products.forEach(p => {
+              const itemDiv = document.createElement("div");
+              itemDiv.style.padding = "10px";
+              itemDiv.style.cursor = "pointer";
+              itemDiv.style.borderBottom = "1px solid var(--border-color)";
+              itemDiv.style.fontSize = "13px";
+              itemDiv.style.color = "var(--text-primary)";
+              itemDiv.innerHTML = `<strong>${p.name}</strong> <span style="font-size:11px; color:var(--text-secondary);">(${p.item_code})</span>`;
+              itemDiv.addEventListener("click", () => {
+                selectReplacementProduct(p);
+              });
+              resultsDiv.appendChild(itemDiv);
+            });
+          }
+          resultsDiv.style.display = "block";
+        }
+      });
+  }, 300);
+}
+
+function selectReplacementProduct(product) {
+  state.selectedReplacementProduct = product;
+  document.getElementById("selected-repl-name").innerText = `${product.name} (${product.item_code})`;
+  document.getElementById("selected-replacement-box").style.display = "block";
+  document.getElementById("replacement-search-results").style.display = "none";
+  document.getElementById("replacement-search-input").value = product.name;
+}
+
+function saveReplacement() {
+  if (!state.originalItemToReplace) {
+    alert("No original product selected.");
+    return;
+  }
+  if (!state.selectedReplacementProduct) {
+    alert("Please search and select a replacement product.");
+    return;
+  }
+  
+  const qty = parseFloat(document.getElementById("replacement-qty-input").value);
+  if (isNaN(qty) || qty <= 0) {
+    alert("Please enter a valid quantity.");
+    return;
+  }
+  
+  const payload = {
+    delivery_id: state.activeSheet.id,
+    original_item_id: state.originalItemToReplace.item_id,
+    replacement_item_id: state.selectedReplacementProduct.id,
+    replacement_qty: qty,
+    user_id: state.currentUser ? state.currentUser.id : null
+  };
+  
+  fetchSecure(`${API_BASE}/api_substitute_product`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify(payload)
+  })
+    .then(res => res.json())
+    .then(data => {
+      if (data.success) {
+        alert("Product substitution saved successfully.");
+        closeReplaceProductModal();
+        openFinalLoadingSheet(state.activeSheet);
+      } else {
+        alert("Error: " + data.error);
+      }
+    })
+    .catch(err => {
+      console.error(err);
+      alert("Failed to save product substitution.");
+    });
+}
+
 // Helper to safely register event listener if element exists
 function safeAddListener(id, event, callback) {
   const el = document.getElementById(id);
@@ -994,4 +1150,14 @@ function setupEventListeners() {
       closeImageModal();
     }
   });
+
+  // Product Replacement Modal closing & listeners
+  safeAddListener("replace-modal-close", "click", closeReplaceProductModal);
+  safeAddListener("replace-product-modal", "click", (e) => {
+    if (e.target.id === "replace-product-modal") {
+      closeReplaceProductModal();
+    }
+  });
+  safeAddListener("replacement-search-input", "input", handleReplacementSearch);
+  safeAddListener("btn-save-replacement", "click", saveReplacement);
 }

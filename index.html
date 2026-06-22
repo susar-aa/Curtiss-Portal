@@ -208,6 +208,41 @@
     </div>
   </div>
 
+  <!-- Product Replacement Modal -->
+  <div id="replace-product-modal" class="modal-backdrop" style="display: none;">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3 id="replace-modal-title">Replace Product</h3>
+        <button id="replace-modal-close" class="close-btn">&times;</button>
+      </div>
+      <div class="modal-body" style="padding: 20px; display: flex; flex-direction: column; gap: 15px; align-items: stretch; justify-content: flex-start; min-height: auto; background: var(--surface);">
+        <div style="font-size: 13px; color: var(--text-secondary); margin-bottom: 5px;">
+          Replacing: <strong id="replace-orig-name" style="color: var(--text-primary);">[Product Name]</strong> (Required Qty: <strong id="replace-orig-qty">[Qty]</strong>)
+        </div>
+        
+        <div class="form-group" style="margin-bottom: 0;">
+          <label style="color: var(--text-secondary); font-size: 12px; font-weight: 600; text-transform: uppercase;">Search Replacement Product</label>
+          <input type="text" id="replacement-search-input" placeholder="Type product name or code..." style="width: 100%; box-sizing: border-box;">
+        </div>
+
+        <div id="replacement-search-results" style="max-height: 150px; overflow-y: auto; border: 1px solid var(--border-color); border-radius: var(--radius-sm); background: rgba(15, 23, 42, 0.8); display: none;">
+          <!-- dynamic results -->
+        </div>
+
+        <div id="selected-replacement-box" style="display: none; padding: 12px; background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.2); border-radius: var(--radius-sm); font-size: 13px;">
+          Selected Substitution: <strong id="selected-repl-name" style="color: var(--accent);">[Product]</strong>
+        </div>
+
+        <div class="form-group" style="margin-bottom: 0;">
+          <label style="color: var(--text-secondary); font-size: 12px; font-weight: 600; text-transform: uppercase;">Replacement Quantity</label>
+          <input type="number" id="replacement-qty-input" min="1" value="1" style="width: 100%; box-sizing: border-box;">
+        </div>
+
+        <button id="btn-save-replacement" class="btn btn-primary" style="width: 100%; margin-top: 10px;">Save Replacement</button>
+      </div>
+    </div>
+  </div>
+
   <!-- 5. DYNAMIC IMAGE MODAL -->
   <div id="image-modal" class="modal-backdrop" style="display: none;">
     <div class="modal-card">
