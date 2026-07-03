@@ -300,6 +300,7 @@ function renderSheetsUI(sheets) {
 
     const idStr = sheet.id ? sheet.id.toString() : "";
     const routeName = sheet.route_name ? sheet.route_name.toLowerCase() : "";
+    const repName = sheet.rep_name ? sheet.rep_name.toLowerCase() : "";
     const vehicleNumber = sheet.vehicle_number ? sheet.vehicle_number.toLowerCase() : "";
     const driverName = sheet.driver_name ? sheet.driver_name.toLowerCase() : "";
     const customerInfo = sheet.customer_info ? sheet.customer_info.toLowerCase() : "";
@@ -308,6 +309,7 @@ function renderSheetsUI(sheets) {
     const matchesSearch = 
       idStr.includes(searchVal) ||
       routeName.includes(searchVal) ||
+      repName.includes(searchVal) ||
       vehicleNumber.includes(searchVal) ||
       driverName.includes(searchVal) ||
       customerInfo.includes(searchVal);
@@ -341,14 +343,13 @@ function renderSheetsUI(sheets) {
 
     card.innerHTML = `
       <div class="manifest-card-header">
-        <h3>Loading Sheet #${sheet.id}</h3>
+        <h3>${sheet.route_name || 'N/A'}</h3>
         <span class="manifest-status ${statusClass}">${displayStatus}</span>
       </div>
       <div class="manifest-info-row">
-        <span>📍 <strong>Route:</strong> ${sheet.route_name || 'N/A'}</span>
-        <span>👥 <strong>Customers:</strong> ${sheet.customer_info || 'N/A'}</span>
-        <span>🚚 <strong>Vehicle:</strong> ${sheet.vehicle_number || 'N/A'} (${sheet.driver_name || 'N/A'})</span>
-        <span>📅 <strong>Delivery Date:</strong> ${sheet.delivery_date || 'N/A'}</span>
+        <span>👤 <strong>Rep:</strong> ${sheet.rep_name || 'N/A'}</span>
+        <span>📊 <strong>Total Bills:</strong> ${sheet.total_bills || 0}</span>
+        <span>💰 <strong>Total Sales:</strong> LKR ${(sheet.total_sales || 0).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</span>
       </div>
       <div class="manifest-progress-wrapper">
         <div class="progress-text">
@@ -362,7 +363,7 @@ function renderSheetsUI(sheets) {
     `;
 
     card.addEventListener("click", () => {
-      openActionModal(sheet);
+      openFinalLoadingSheet(sheet);
     });
 
     listContainer.appendChild(card);
@@ -447,8 +448,8 @@ function queueFinalItemUpdate(item) {
 
 function openFinalLoadingSheet(sheet) {
   state.activeSheet = sheet;
-  document.getElementById("final-sheet-num").innerText = `Loading Sheet #${sheet.id}`;
-  document.getElementById("final-sheet-route").innerText = `Route: ${sheet.route_name}`;
+  document.getElementById("final-sheet-num").innerText = sheet.route_name || 'N/A';
+  document.getElementById("final-sheet-route").innerText = `Loading Sheet #${sheet.id} • Rep: ${sheet.rep_name || 'N/A'}`;
 
   const localCacheKey = `curtiss_picking_sheet_details_${sheet.id}`;
   const localCachedDetails = JSON.parse(localStorage.getItem(localCacheKey));
