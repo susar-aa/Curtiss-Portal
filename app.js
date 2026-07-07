@@ -193,7 +193,8 @@ function handleLogin(e) {
   fetch(`${API_BASE}/api_login`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ username: usernameVal, password: passwordVal })
+    body: JSON.stringify({ username: usernameVal, password: passwordVal }),
+    credentials: "include"
   })
   .then(res => res.json())
   .then(data => {
