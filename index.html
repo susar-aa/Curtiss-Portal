@@ -256,6 +256,24 @@
     </div>
   </div>
 
-  <script src="app.js"></script>
+  <script>
+    // Programmatically unregister service workers to avoid stale cache issues on mobile devices
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.getRegistrations().then(function(registrations) {
+        for(let registration of registrations) {
+          registration.unregister();
+        }
+      });
+    }
+    // Delete all browser caches for this origin
+    if ('caches' in window) {
+      caches.keys().then(function(names) {
+        for (let name of names) {
+          caches.delete(name);
+        }
+      });
+    }
+  </script>
+  <script src="app.js?v=1.0.3"></script>
 </body>
 </html>
