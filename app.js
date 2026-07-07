@@ -1,5 +1,5 @@
 // PWA Core Logic & State Management
-const API_BASE = window.location.hostname.includes("curtiss.suzxlabs.com")
+const API_BASE = window.location.hostname.includes("suzxlabs.com")
   ? "https://curtiss.suzxlabs.com/picking"
   : window.location.origin + "/Curtiss-ERP/Picking";
 
