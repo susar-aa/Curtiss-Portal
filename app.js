@@ -1,7 +1,7 @@
 // PWA Core Logic & State Management
-const API_BASE = window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1" || window.location.hostname.startsWith("192.168.")
-  ? window.location.origin + "/Curtiss-ERP/Picking"
-  : "https://curtiss.suzxlabs.com/picking";
+const API_BASE = window.location.hostname.includes("curtiss.suzxlabs.com")
+  ? "https://curtiss.suzxlabs.com/picking"
+  : window.location.origin + "/Curtiss-ERP/Picking";
 
 // Secure fetch wrapper to validate and handle session expiry
 function fetchSecure(url, options = {}) {
@@ -10,7 +10,7 @@ function fetchSecure(url, options = {}) {
   return fetch(url, options)
     .then(res => {
       if (res.status === 401 || res.status === 403) {
-        handleSessionExpired();
+        handleSessionExpired(`HTTP Status ${res.status} on ${url}`);
         throw new Error("Unauthorized");
       }
       
@@ -19,7 +19,7 @@ function fetchSecure(url, options = {}) {
       if (contentType && contentType.includes("application/json")) {
         return res.clone().json().then(data => {
           if (data && data.unauthorized) {
-            handleSessionExpired();
+            handleSessionExpired(`API returned unauthorized flag on ${url}`);
             throw new Error("Unauthorized");
           }
           return res;
@@ -30,8 +30,8 @@ function fetchSecure(url, options = {}) {
     });
 }
 
-function handleSessionExpired() {
-  alert("Your session has expired. Please log in again.");
+function handleSessionExpired(detail = "") {
+  alert("Your session has expired. Please log in again.\n\nDetail: " + (detail || "No details provided."));
   state.currentUser = null;
   localStorage.removeItem("curtiss_picking_user");
   localStorage.removeItem("curtiss_picking_sheets");
@@ -214,8 +214,9 @@ function handleLogin(e) {
     }
   })
   .catch(err => {
-    errorEl.innerText = "Error reaching authentication server. Try again.";
+    errorEl.innerText = "Error reaching authentication server. Try again.\n" + err.message;
     errorEl.style.display = "block";
+    alert("Connection Error details:\nMessage: " + err.message + "\nStack: " + err.stack + "\nTarget URL: " + API_BASE + "/api_login");
     console.error(err);
   });
 }
