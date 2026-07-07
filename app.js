@@ -6,6 +6,17 @@ const API_BASE = window.location.hostname.includes("suzxlabs.com")
 // Secure fetch wrapper to validate and handle session expiry
 function fetchSecure(url, options = {}) {
   options.credentials = options.credentials || "include";
+  options.headers = options.headers || {};
+  
+  // Retrieve user ID from state or localStorage
+  const user = state.currentUser || JSON.parse(localStorage.getItem("curtiss_picking_user"));
+  if (user && user.id) {
+    if (options.headers instanceof Headers) {
+      options.headers.set("X-User-ID", user.id);
+    } else {
+      options.headers["X-User-ID"] = user.id;
+    }
+  }
   
   return fetch(url, options)
     .then(res => {
