@@ -540,8 +540,15 @@ function renderFinalLoadingUI() {
     return;
   }
 
-  // Sort products alphabetically
-  items.sort((a, b) => a.item_name.localeCompare(b.item_name));
+  // Sort products by category first, then alphabetically by item name
+  items.sort((a, b) => {
+    const catA = a.category_name || "Uncategorized";
+    const catB = b.category_name || "Uncategorized";
+    if (catA !== catB) {
+      return catA.localeCompare(catB);
+    }
+    return a.item_name.localeCompare(b.item_name);
+  });
 
   items.forEach(item => {
     const card = document.createElement("div");
