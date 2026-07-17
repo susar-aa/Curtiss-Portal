@@ -602,7 +602,10 @@ function renderFinalLoadingUI() {
           : `<span class="img-fallback">📦</span>`}
       </div>
       <div class="product-info">
-        <div class="product-name">${item.item_name}</div>
+        <div class="product-name">
+          ${item.item_name}
+          ${item.variation_name ? `<span style="font-size: 11px; color: var(--accent); display: block; margin-top: 2px;">${item.variation_name}</span>` : ''}
+        </div>
         <div class="qty-req" style="font-size: 11px; color: var(--text-secondary);">
           Required Qty: <strong>${item.required_qty}</strong>
         </div>
@@ -840,7 +843,10 @@ function createProductCard(item) {
         : `<span class="img-fallback">📦</span>`}
     </div>
     <div class="product-info">
-      <div class="product-name">${item.item_name}</div>
+      <div class="product-name">
+        ${item.item_name}
+        ${item.variation_name ? `<span style="font-size: 11px; color: var(--accent); display: block; margin-top: 2px;">${item.variation_name}</span>` : ''}
+      </div>
       <div class="qty-req">Required: <strong>${item.required_qty}</strong> pcs</div>
     </div>
     <div class="qty-adjuster">
@@ -967,7 +973,12 @@ function openReplaceProductModal(item) {
   state.originalItemToReplace = item;
   state.selectedReplacementProduct = null;
   
-  document.getElementById("replace-orig-name").innerText = item.item_name;
+  let origNameText = item.item_name;
+  if (item.variation_name) {
+    origNameText += ` (${item.variation_name})`;
+  }
+  
+  document.getElementById("replace-orig-name").innerText = origNameText;
   document.getElementById("replace-orig-qty").innerText = item.required_qty;
   
   document.getElementById("replacement-search-input").value = "";
@@ -1017,7 +1028,13 @@ function handleReplacementSearch() {
               itemDiv.style.borderBottom = "1px solid var(--border-color)";
               itemDiv.style.fontSize = "13px";
               itemDiv.style.color = "var(--text-primary)";
-              itemDiv.innerHTML = `<strong>${p.name}</strong> <span style="font-size:11px; color:var(--text-secondary);">(${p.item_code})</span>`;
+              
+              let displayName = p.name;
+              if (p.variation_name) {
+                displayName += ` - ${p.variation_name}`;
+              }
+              
+              itemDiv.innerHTML = `<strong>${displayName}</strong> <span style="font-size:11px; color:var(--text-secondary);">(${p.variation_sku || p.item_code})</span>`;
               itemDiv.addEventListener("click", () => {
                 selectReplacementProduct(p);
               });
@@ -1032,10 +1049,14 @@ function handleReplacementSearch() {
 
 function selectReplacementProduct(product) {
   state.selectedReplacementProduct = product;
-  document.getElementById("selected-repl-name").innerText = `${product.name} (${product.item_code})`;
+  let displayName = product.name;
+  if (product.variation_name) {
+    displayName += ` - ${product.variation_name}`;
+  }
+  document.getElementById("selected-repl-name").innerText = `${displayName} (${product.variation_sku || product.item_code})`;
   document.getElementById("selected-replacement-box").style.display = "block";
   document.getElementById("replacement-search-results").style.display = "none";
-  document.getElementById("replacement-search-input").value = product.name;
+  document.getElementById("replacement-search-input").value = displayName;
 }
 
 function saveReplacement() {
@@ -1057,7 +1078,9 @@ function saveReplacement() {
   const payload = {
     delivery_id: state.activeSheet.id,
     original_item_id: state.originalItemToReplace.item_id,
+    original_variation_option_id: state.originalItemToReplace.variation_option_id,
     replacement_item_id: state.selectedReplacementProduct.id,
+    replacement_variation_option_id: state.selectedReplacementProduct.variation_option_id,
     replacement_qty: qty,
     user_id: state.currentUser ? state.currentUser.id : null
   };
