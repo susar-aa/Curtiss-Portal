@@ -354,11 +354,16 @@ function renderSheetsUI(sheets) {
     const displayStatus = sheet.status || "Pending";
     const statusClass = displayStatus.toLowerCase().replace(/\s+/g, '-');
 
+    const boundBadgeHtml = sheet.is_bound 
+      ? `<div class="manifest-bound-badge">🔗 Bound Route${sheet.bound_route_names ? ': ' + sheet.bound_route_names : ''}</div>`
+      : '';
+
     card.innerHTML = `
       <div class="manifest-card-header">
         <h3>${sheet.route_name || 'N/A'}</h3>
         <span class="manifest-status ${statusClass}">${displayStatus}</span>
       </div>
+      ${boundBadgeHtml}
       <div class="manifest-info-row">
         <span>👤 <strong>Rep:</strong> ${sheet.rep_name || 'N/A'}</span>
         <span>📊 <strong>Total Bills:</strong> ${sheet.total_bills || 0}</span>
